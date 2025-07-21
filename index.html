@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Kunststoff-Quiz – Lernfeld 6</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #121212; color: #f1f1f1; }
+    .card { background: #1e1e1e; border-radius: 1rem; padding: 2rem; box-shadow: 0 0 10px #000; max-width: 600px; margin: auto; }
+    .question { font-size: 1.2rem; margin-bottom: 1rem; }
+    .answers { display: flex; flex-direction: column; gap: 0.5rem; }
+    button { padding: 0.8rem; border: none; border-radius: 0.5rem; background: #007bff; color: white; font-size: 1rem; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .result { margin-top: 1rem; font-weight: bold; }
+    .progress { margin-top: 1rem; font-size: 0.9rem; color: #aaa; }
+    .score { margin-top: 1rem; font-size: 1rem; color: #00ffcc; }
+    .end { margin-top: 1.5rem; font-size: 1.2rem; font-weight: bold; color: #ffd700; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="question" id="question">Frage wird geladen...</div>
+    <div class="answers" id="answers"></div>
+    <div class="result" id="result"></div>
+    <div class="progress" id="progress"></div>
+    <div class="score" id="score"></div>
+    <div class="end" id="end"></div>
+    <div class="restart" style="text-align:center; margin-top:1rem;">
+      <button onclick="resetQuiz()">🔁 Quiz neu starten</button>
+    </div>
+  </div>
+
+  <script src="quiz_fragen.js"></script>
+  <script>
+    const recentLimit = 10;
+    let recentIndexes = [];
+
+    let questionPool = [...quiz];
+    let current = 0;
+    let richtig = 0;
+    let falsch = 0;
+    const maxFragen = 20;
+
+    const questionEl = document.getElementById("question");
+    const answersEl = document.getElementById("answers");
+    const resultEl = document.getElementById("result");
+    const progressEl = document.getElementById("progress");
+    const scoreEl = document.getElementById("score");
+    const endEl = document.getElementById("end");
+
+    function updateScore() {
+      const prozent = Math.round((richtig / (richtig + falsch)) * 100 || 0);
+      scoreEl.textContent = `✅ Richtig: ${richtig} | ❌ Falsch: ${falsch} | 🎯 Quote: ${prozent}%`;
+    }
+
+    function getNextQuestionIndex() {
+      let availableIndexes = quiz.map((_, i) => i).filter(i => !recentIndexes.includes(i));
+      if (availableIndexes.length === 0) recentIndexes = [];
+      const pool = quiz.map((_, i) => i).filter(i => !recentIndexes.includes(i));
+      const next = pool[Math.floor(Math.random() * pool.length)];
+      recentIndexes.push(next);
+      if (recentIndexes.length > recentLimit) recentIndexes.shift();
+      return next;
+    }
+
+    function showQuestion() {
+      if (current >= maxFragen) {
+        questionEl.textContent = "";
+        answersEl.innerHTML = "";
+        progressEl.textContent = "";
+        resultEl.textContent = "";
+        endEl.textContent = `🎉 Quiz beendet! Du hast ${richtig} von ${maxFragen} Fragen richtig beantwortet.`;
+        return;
+      }
+
+      const index = getNextQuestionIndex();
+      const q = quiz[index];
+      questionEl.textContent = `${current + 1}. ${q.frage}`;
+      answersEl.innerHTML = "";
+      resultEl.textContent = "";
+      progressEl.textContent = `Frage ${current + 1} von ${maxFragen}`;
+      q.antworten.forEach((text, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = text;
+        btn.onclick = () => checkAnswer(idx, q);
+        answersEl.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(answerIndex, q) {
+      if (answerIndex === q.korrekt) {
+        resultEl.textContent = "✅ Richtig!";
+        richtig++;
+      } else {
+        resultEl.textContent = `❌ Falsch! Richtige Antwort: ${q.antworten[q.korrekt]}`;
+        falsch++;
+      }
+      updateScore();
+      current++;
+      setTimeout(showQuestion, 2500);
+    }
+
+    function resetQuiz() {
+      current = 0;
+      richtig = 0;
+      falsch = 0;
+      recentIndexes = [];
+      endEl.textContent = "";
+      updateScore();
+      showQuestion();
+    }
+
+    updateScore();
+    showQuestion();
+  </script>
+</body>
+</html>
