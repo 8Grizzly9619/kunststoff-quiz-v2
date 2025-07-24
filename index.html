@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kunststoff-Quiz – Lernfeld 6</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #121212; color: #f1f1f1; }
+    .card { background: #1e1e1e; border-radius: 1rem; padding: 2rem; box-shadow: 0 0 10px #000; max-width: 700px; margin: auto; }
+    .question { font-size: 1.2rem; margin-bottom: 1rem; }
+    .answers { display: flex; flex-direction: column; gap: 0.5rem; }
+    button { padding: 0.8rem; border: none; border-radius: 0.5rem; background: #007bff; color: white; font-size: 1rem; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .result, .erklaerung { margin-top: 1rem; font-weight: bold; }
+    .erklaerung { color: #00e0ff; font-size: 0.95rem; }
+    .quelle { color: #aaaaaa; font-size: 0.85rem; margin-top: 0.3rem; }
+    .merksatz { color: #ffff99; font-size: 0.9rem; margin-top: 0.3rem; }
+    .progress, .score, .end { margin-top: 1rem; font-size: 1rem; text-align: center; }
+    .restart { text-align: center; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="question" id="question">Frage wird geladen...</div>
+    <div class="answers" id="answers"></div>
+    <div class="result" id="result"></div>
+    <div class="erklaerung" id="erklaerung"></div>
+    <div class="quelle" id="quelle"></div>
+    <div class="merksatz" id="merksatz"></div>
+    <div class="progress" id="progress"></div>
+    <div class="score" id="score"></div>
+    <div class="end" id="end"></div>
+    <div class="restart">
+      <button onclick="resetQuiz()">🔁 Quiz neu starten</button>
+    </div>
+  </div>
+  <script src="quiz_fragen_final.js"></script>
+  <script>
+    let current = 0;
+    let richtig = 0;
+    let falsch = 0;
+    const maxFragen = quiz.length;
+
+    function updateScore() {
+      const prozent = Math.round((richtig / (richtig + falsch)) * 100 || 0);
+      document.getElementById("score").textContent = `✅ Richtig: ${richtig} | ❌ Falsch: ${falsch} | 🎯 Quote: ${prozent}%`;
+    }
+
+    function showQuestion() {
+      if (current >= maxFragen) {
+        document.getElementById("question").textContent = "";
+        document.getElementById("answers").innerHTML = "";
+        document.getElementById("progress").textContent = "";
+        document.getElementById("result").textContent = "";
+        document.getElementById("erklaerung").textContent = "";
+        document.getElementById("quelle").textContent = "";
+        document.getElementById("merksatz").textContent = "";
+        document.getElementById("end").textContent = `🎉 Quiz beendet! Du hast ${richtig} von ${maxFragen} Fragen richtig beantwortet.`;
+        return;
+      }
+
+      const q = quiz[current];
+      document.getElementById("question").textContent = `${current + 1}. ${q.frage}`;
+      document.getElementById("answers").innerHTML = "";
+      document.getElementById("result").textContent = "";
+      document.getElementById("erklaerung").textContent = "";
+      document.getElementById("quelle").textContent = "";
+      document.getElementById("merksatz").textContent = "";
+      document.getElementById("progress").textContent = `Frage ${current + 1} von ${maxFragen}`;
+      q.antworten.forEach((text, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = text;
+        btn.onclick = () => checkAnswer(idx, q);
+        document.getElementById("answers").appendChild(btn);
+      });
+    }
+
+    function checkAnswer(answerIndex, q) {
+      const richtiges = q.antworten[q.korrekt];
+      if (answerIndex === q.korrekt) {
+        document.getElementById("result").textContent = "✅ Richtig!";
+        richtig++;
+      } else {
+        document.getElementById("result").textContent = `❌ Falsch! Richtige Antwort: ${richtiges}`;
+        falsch++;
+      }
+      document.getElementById("erklaerung").textContent = q.erklaerung || "";
+      document.getElementById("quelle").textContent = q.quelle || "";
+      document.getElementById("merksatz").textContent = q.merksatz || "";
+      updateScore();
+      current++;
+      setTimeout(showQuestion, 3500);
+    }
+
+    function resetQuiz() {
+      current = 0;
+      richtig = 0;
+      falsch = 0;
+      document.getElementById("end").textContent = "";
+      updateScore();
+      showQuestion();
+    }
+
+    updateScore();
+    showQuestion();
+  </script>
+</body>
+</html>
